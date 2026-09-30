@@ -1,0 +1,508 @@
+{
+  "name": "Lead Digest+Lead Scoring",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Autonomous Company ",
+        "formDescription": "Lead",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "placeholder": "abc@xmail.com",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Company"
+            },
+            {
+              "fieldLabel": "Message"
+            },
+            {
+              "fieldLabel": "Budget",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "$1000 or under"
+                  },
+                  {
+                    "option": "$1000-$5000"
+                  },
+                  {
+                    "option": "$5000+"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false,
+          "ignoreBots": true
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        -448
+      ],
+      "id": "436bfab5-b8bc-4b4b-aec4-6fe1725f9290",
+      "name": "On form submission"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = $('Trimming').item.json;\n\nlet score = 0;\n\nconst email = data.Email || \"\";\nconst personalDomains = [\"gmail.com\", \"yahoo.com\", \"hotmail.com\", \"outlook.com\"];\nconst domain = email.split(\"@\")[1] || \"\";\nif (domain && !personalDomains.includes(domain)) score += 2;\n\nconst budget = data.Budget || \"\";\nif (budget === \"$5000+\") score += 3;\nelse if (budget === \"$1000-$5000\") score += 2;\nelse if (budget === \"$1000 or under\") score += 1;\n\nconst message = data.Message || \"\";\nif (message.length > 100) score += 2;\nelse if (message.length > 30) score += 1;\n\nconst keywords = [\"urgent\", \"asap\", \"pricing\", \"quote\", \"ready to start\"];\nconst lowerMsg = message.toLowerCase();\nif (keywords.some(word => lowerMsg.includes(word))) score += 2;\n\nreturn {\n  json: {\n    ...data,\n    score: score\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -544
+      ],
+      "id": "1aa040b5-95ca-4974-915d-1656221046c1",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Autonomus Company Details"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('Trimming').item.json.Name }}",
+            "Email": "={{ $('Trimming').item.json.Email }}",
+            "Company": "={{ $('Trimming').item.json.Company }}",
+            "Message": "={{ $('Trimming').item.json.Message }}",
+            "Budget": "={{ $('Trimming').item.json.Budget }}",
+            "Score": "={{ $('Code in JavaScript').item.json.score }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        -352
+      ],
+      "id": "f5b84d38-266f-42a3-95ea-c0a3544ccfae",
+      "name": "Append or update row in sheet"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Autonomus Company Details"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email": "={{ $('Trimming').item.json.Email }}",
+            "Name": "={{ $('Trimming').item.json.Name }}",
+            "Company": "={{ $('Trimming').item.json.Company }}",
+            "Budget": "={{ $('Trimming').item.json.Budget }}",
+            "Message": "={{ $('Trimming').item.json.Message }}",
+            "Score": "={{ $json.score }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        -544
+      ],
+      "id": "75069e4b-51f4-4172-8c20-f6581cce233a",
+      "name": "Update row in sheet"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b7cdac86-ad84-4c95-bea3-275e6d8a6a86",
+              "name": "Name",
+              "value": "={{ $json.Name.trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "577a1738-a263-4147-881c-b1826f0bf9ae",
+              "name": "Email",
+              "value": "={{ $json.Email.toLowerCase().trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "be3f334b-0caf-4f24-80db-2ba8b8ab6565",
+              "name": "Company",
+              "value": "={{ $json.Company }}",
+              "type": "string"
+            },
+            {
+              "id": "5628225d-85f5-4b5c-b4cd-d9f6efce6f4b",
+              "name": "Message",
+              "value": "={{ $json.Message }}",
+              "type": "string"
+            },
+            {
+              "id": "792a02f0-f4c3-4887-a176-d319ba1f46e1",
+              "name": "Budget",
+              "value": "={{ $json.Budget }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        -448
+      ],
+      "id": "d582b863-c336-4921-960e-b7ed9e00fa4c",
+      "name": "Trimming"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Autonomus Company Details"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $json.Email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        -448
+      ],
+      "id": "7f3d1347-9e6e-494a-ac92-4fb4516a90d1",
+      "name": "Check for Duplicate",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "86f75b78-7005-4383-bfc1-0498a04c1621",
+              "leftValue": "={{ Boolean($json.Email) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        -448
+      ],
+      "id": "f3ea3f95-0e20-4d31-ad84-800c2bd542f7",
+      "name": "Duplicate?"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const data = $('Trimming').item.json;\n\nlet score = 0;\n\nconst email = data.Email || \"\";\nconst personalDomains = [\"gmail.com\", \"yahoo.com\", \"hotmail.com\", \"outlook.com\"];\nconst domain = email.split(\"@\")[1] || \"\";\nif (domain && !personalDomains.includes(domain)) score += 2;\n\nconst budget = data.Budget || \"\";\nif (budget === \"$5000+\") score += 3;\nelse if (budget === \"$1000-$5000\") score += 2;\nelse if (budget === \"$1000 or under\") score += 1;\n\nconst message = data.Message || \"\";\nif (message.length > 100) score += 2;\nelse if (message.length > 30) score += 1;\n\nconst keywords = [\"urgent\", \"asap\", \"pricing\", \"quote\", \"ready to start\"];\nconst lowerMsg = message.toLowerCase();\nif (keywords.some(word => lowerMsg.includes(word))) score += 2;\n\nreturn {\n  json: {\n    ...data,\n    score: score\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -352
+      ],
+      "id": "bec79ec4-1580-44da-837f-41d151e79505",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Trimming",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trimming": {
+      "main": [
+        [
+          {
+            "node": "Check for Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Duplicate": {
+      "main": [
+        [
+          {
+            "node": "Duplicate?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Duplicate?": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
