@@ -2,7 +2,7 @@
 
 A no-code lead pipeline built in n8n. A web form captures a lead, a rule-based scorer ranks it, Google Sheets stores it, and a scheduled digest posts the top 5 leads to Slack, so a sales person always knows who to contact first.
 
-![Canvas overview](screenshots/canvas-overview.png)
+![digestoverview](screenshots/LeadDigestSS.png)
 
 ## What it does
 
